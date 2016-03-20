@@ -29,7 +29,26 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+
+  for i in xrange(num_train):
+    f = X[i].dot(W)
+    f -= np.max(f)
+    exps = np.exp(f)
+    expsum = np.sum(exps)
+    sigmoid = - np.log( exps[y[i]] / expsum )
+    loss += sigmoid
+
+    for j in xrange(num_classes):
+      p = exps[j] / expsum
+      dW[:, j] += (p - (j == y[i])) * X[i]
+
+  loss /= num_train
+  dW /= num_train
+
+  loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -53,7 +72,26 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+
+  f = X.dot(W)
+  f -= np.max(f)
+  exps = np.exp(f)
+  expsum = np.sum(exps, axis=1)
+  correct_classes = exps[np.arange(num_train), y]
+  loss = np.sum(-np.log(correct_classes/expsum))
+
+  ps = exps / np.tile(expsum, (num_classes, 1)).T
+  correct = np.zeros_like(ps)
+  correct[np.arange(num_train), y] = 1
+  dW = X.T.dot(ps - correct)
+
+  loss /= num_train
+  dW /= num_train
+
+  loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
